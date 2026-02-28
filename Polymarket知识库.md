@@ -1,199 +1,290 @@
-# Polymarket 知识库 - 工具、策略与研究
+# Polymarket 交易机器人 - 完整设置指南 (v2)
 
-> 持续更新中...
+## 核心架构
 
-## 一、核心概念
-
-### Polymarket 是什么
-- 基于 Polygon 区块链的去中心化预测市场
-- 使用 USDC 交易
-- **免交易手续费**（只赚流动性）
-- 不需要 KYC
-
-### 基础机制
-- 每个事件 = 一个市场
-- 每个市场 = Yes/No 两种代币
-- 价格 = 市场认为事件发生的概率
-- 买入 = 买概率，赔率 = 1/价格
-
----
-
-## 二、免费 API 接口
-
-### 1. Gamma API（市场数据）
 ```
-基础URL: https://gamma-api.polymarket.com
-
-获取市场:
-curl "https://gamma-api.polymarket.com/markets?active=true&limit=10"
-
-获取事件:
-curl "https://gamma-api.polymarket.com/events?active=true&closed=false&limit=10"
-
-按交易量排序:
-curl "https://gamma-api.polymarket.com/events?active=true&order=volume_24hr&ascending=false&limit=10"
-
-搜索:
-curl "https://gamma-api.polymarket.com/public-search?query=bitcoin"
-```
-
-### 2. CLOB API（价格与订单簿）
-```
-基础URL: https://clob.polymarket.com
-
-实时价格:
-curl "https://clob.polymarket.com/prices?token_id=TOKEN_ID"
-
-订单簿:
-curl "https://clob.polymarket.com/orderbook?token_id=TOKEN_ID"
-```
-
-### 3. Data API（交易数据）
-```
-基础URL: https://data-api.polymarket.com
-
-用户持仓:
-curl "https://data-api.polymarket.com/positions?address=WALLET_ADDRESS"
-
-交易历史:
-curl "https://data-api.polymarket.com/trades?address=WALLET_ADDRESS"
-```
-
-### 4. WebSocket（实时推送）
-```
-URL: wss://clob.polymarket.com/ws
-
-连接后可订阅:
-- orderbook 更新
-- 价格变动
-- 成交记录
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  发现层     │ →  │  执行层     │ →  │  链上结算   │
+│ Gamma API   │    │ CLOB Client │    │ Polygon     │
+└─────────────┘    └─────────────┘    └─────────────┘
 ```
 
 ---
 
-## 三、推荐工具
+## 必需物品
 
-### 🐋 跟单工具
-
-| 工具 | 特点 | 费用 |
-|------|------|------|
-| PolySight | Telegram机器人，实时跟单 | 付费 |
-| polymarket-mcp-server | 开源，连接Claude | 免费 |
-| 0x1979 Whale Bot | 追踪鲸鱼 | 免费/付费 |
-
-### 📊 数据分析
-
-| 工具 | 特点 |
+| 物品 | 说明 |
 |------|------|
-| **Polyterm** | 终端版全方位工具，支持鲸鱼追踪 |
-| **Bitquery** | GraphQL查询链上数据 |
-| **The Graph** | 去中心化索引 |
-
-### 🤖 交易机器人
-
-| 工具 | 语言 | 特点 |
-|------|------|------|
-| polymarket-trading-bot | Python | 入门友好 |
-| polymarket-spike-bot | Python | 监测价格波动 |
-| poly-based-sdk | Python | 完整SDK |
-| Polymarket/agents | Python | 官方AI Agent框架 |
+| Polygon钱包 | 需要私钥 |
+| USDC.e | 交易本金 |
+| POL | 支付Gas |
+| RPC节点 | Quicknode或其他 |
 
 ---
 
-## 四、策略研究
+## API 端点总览
 
-### 1. 跟单（Copy Trading）
-**原理**: 复制成功交易者的订单
+### 市场数据 (Gamma API) - 无需认证
+```
+GET https://gamma-api.polymarket.com/markets
+GET https://gamma-api.polymarket.com/events
+GET https://gamma-api.polymarket.com/markets/{slug}
+```
 
-**步骤**:
-1. 找到靠谱的"鲸鱼"钱包
-2. 监测他们的交易
-3. 自动复制他们的订单
+### 交易 (CLOB API) - 需要签名
+```
+POST https://clob.polymarket.com/order
+GET  https://clob.polymarket.com/orderbook
+```
 
-**工具**: PolySight, 手动跟踪
-
-### 2. 套利（Arbitrage）
-**原理**: 当市场效率低时，买低卖高
-
-**例子**:
-- Polymarket 价格 = 60%
-- 另一个市场 = 65%
-- 买入便宜的，卖出贵的
-
-**难点**: 需要速度快，资金大
-
-### 3. 鲸鱼追踪（Whale Tracking）
-**原理**: 跟着大资金走
-
-**信号**:
-- 多个大钱包同时买入
-- 沉默钱包突然活跃
-- 某个钱包的历史胜率高
-
-**工具**: Polyterm, Bitquery
-
-### 4. 事件分析（Manual Edge）
-**原理**: 利用信息优势
-
-**方向**:
-- 你擅长的领域（体育、政治、商业）
-- 新闻前的预判
-- 长期趋势
+### 价格历史
+```
+GET https://gamma-api.polymarket.com/markets/{id}/history
+```
 
 ---
 
-## 五、关键资源
+## 完整Python代码示例
 
-### 官方文档
-- https://docs.polymarket.com
+### Step 1: 获取市场数据
 
-### GitHub 仓库
-- https://github.com/Polymarket/agents
-- https://github.com/NYTEMODEONLY/polyterm
-- https://github.com/olliegrimes123/polybased-sdk
-- https://github.com/discountry/polymarket-trading-bot
+```python
+import requests
 
-### 社区
-- Polymarket Discord
-- r/polymarketkalshi (Reddit)
-- Twitter #Polymarket
+# 获取活跃市场
+response = requests.get(
+    "https://gamma-api.polymarket.com/markets",
+    params={
+        "active": "true",
+        "closed": "false", 
+        "limit": 10,
+        "order": "volume_24hr"  # 按24小时成交量排序
+    }
+)
+markets = response.json()
+
+for m in markets[:5]:
+    print(f"问题: {m['question']}")
+    print(f"ID: {m['id']}")
+    print(f"TokenIDs: {m['clobTokenIds']}")  # [Yes, No]
+    print(f"当前价格: {m.get('bestBid')} / {m.get('bestAsk')}")
+    print("---")
+```
+
+### Step 2: 安装SDK并初始化
+
+```bash
+pip install py-clob-client
+```
+
+```python
+from py_clob_client.client import ClobClient
+from py_clob_client.clob_types import OrderArgs, OrderType
+from py_clob_client.order_builder.constants import BUY, SELL
+import os
+
+host = "https://clob.polymarket.com"
+chain_id = 137  # Polygon mainnet
+private_key = os.getenv("PRIVATE_KEY")
+
+# 方式1: 使用私钥直接创建
+client = ClobClient(
+    host,
+    key=private_key,
+    chain_id=chain_id,
+)
+
+# 派生API凭证
+api_creds = client.create_or_derive_api_creds()
+client.set_api_creds(api_creds)
+
+print(f"钱包地址: {client.address}")
+```
+
+### Step 3: 获取Token ID
+
+```python
+# 方式A: 通过市场查询
+markets = requests.get(
+    "https://gamma-api.polymarket.com/markets",
+    params={"question": "Will BTC be above $100k by June 2025?", "limit": 1}
+).json()
+
+if markets:
+    token_id = markets[0]['clobTokenIds'][0]  # Yes token
+    condition_id = markets[0]['conditionId']
+    print(f"Token ID: {token_id}")
+    print(f"Condition ID: {condition_id}")
+```
+
+### Step 4: 下单
+
+```python
+# 买单 (限价单)
+order = OrderArgs(
+    token_id="TOKEN_ID_HERE",
+    price=0.55,        # 愿意买的价格
+    size=10,          # 数量 (必须整数!)
+    side=BUY,
+    order_type=OrderType.GTC,  # Good Till Cancel
+)
+
+signed = client.create_order(order)
+resp = client.post_order(signed, OrderType.GTC)
+print(resp)
+
+# 市价单 (FOK - Fill or Kill)
+market_order = MarketOrderArgs(
+    token_id="TOKEN_ID_HERE",
+    amount=10.0,      # 金额
+    side=BUY,
+    order_type=OrderType.FOK,
+)
+signed_mo = client.create_market_order(market_order)
+resp_mo = client.post_order(signed_mo, OrderType.FOK)
+```
+
+### Step 5: 查看持仓
+
+```python
+# 获取当前持仓
+positions = client.get_positions()
+print(positions)
+
+# 获取某个市场的持仓
+market_positions = client.get_positions(condition_id="CONDITION_ID")
+```
 
 ---
 
-## 六、小而精路线建议
-
-### 适合新手的策略
-
-1. **数据监控**
-   - 用 Polyterm 监控特定市场
-   - 不用真钱交易，只学习
-
-2. **小额跟单**
-   - 找到胜率高的钱包
-   - 每次只跟 1-5 U
-
-3. **信息差**
-   - 利用你擅长的领域知识
-   - 只买你真正懂的
-
-### 风险控制
+## 重要规则 (必须记住!)
 
 | 规则 | 说明 |
 |------|------|
-| 只用闲钱 | 最多 10-20 U |
-| 设止损 | 到点就跑 |
-| 不梭哈 | 分散风险 |
-| 记录复盘 | 每次交易写原因 |
+| **最小订单** | size × price ≥ $1 |
+| **价格精度** | ≤ 2位小数（价格<0.04或>0.96时3位）|
+| **数量必须整数** | size必须是int，不能是float |
+| **签名类型0** | EOA模式，自己付Gas |
+| **链ID** | 137 (Polygon) |
+| **货币** | USDC: `0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359` |
 
 ---
 
-## 七、待研究
+## 订单类型
 
-- [ ] 你的Twitter收藏链接
-- [ ] 具体跟单工具使用
-- [ ] 鲸鱼钱包筛选标准
-- [ ] 最佳市场筛选方法
+| 类型 | 说明 |
+|------|------|
+| GTC | Good Till Cancel - 取消前一直有效 |
+| FOK | Fill or Kill - 立即全部成交，否则取消 |
+| GTC | Good Till Cancel |
+| FAK | Fill or Kill |
 
 ---
 
-*更新时间: 2026-02-28*
+## 跟单策略 (最简单)
+
+### 原理
+复制成功交易者的钱包地址
+
+### 工具
+- **Polywhaler**: https://polymarket.com/polywhaler - 追踪鲸鱼
+- **Quicknode跟单教程**: 有完整TypeScript代码
+
+### 鲸鱼地址示例
+- `0x1e1f17412069c0736adfaadf8ee7f46e5612c855` - Top 0.01%
+
+### 跟单配置 (.env)
+```bash
+TARGET_WALLET=0x要跟单的钱包地址
+PRIVATE_KEY=你的私钥
+RPC_URL=https://polygon-mainnet.quiknode.pro/YOUR_KEY
+POSITION_MULTIPLIER=0.1    # 跟单比例 (10%)
+MAX_TRADE_SIZE=100         # 最大交易额
+MIN_TRADE_SIZE=1           # 最小交易额
+USE_WEBSOCKET=true         # 使用WebSocket
+```
+
+---
+
+## 高频策略 (5分钟市场)
+
+### 为什么需要机器人
+- 5分钟市场变化太快
+- 手动操作来不及
+- WebSocket实时数据
+
+### 核心逻辑
+```python
+# WebSocket监听
+import websocket
+
+ws = websocket.WebSocketApp(
+    "wss://ws-subscriptions-clob.polymarket.com/ws",
+    on_message=on_message,
+)
+ws.run_forever()
+```
+
+### 策略类型
+1. **均值回归**: 价格偏离均值时入场
+2. **突破交易**: 价格突破关键点位
+3. **套利**: 不同市场间价差
+
+---
+
+## 常见错误排错
+
+| 错误 | 原因 | 解决方案 |
+|------|------|----------|
+| `insufficient balance` | 用了EOA地址而不是proxy | 检查钱包地址 |
+| `Order silently rejected` | 价格小数位太多 | round到2位 |
+| `Order value error` | size × price < $1 | 增加金额 |
+| Positions empty | 查询的是EOA而不是proxy | 用proxy地址 |
+| WebSocket无数据 | 订阅格式错误 | 检查JSON格式 |
+
+---
+
+## 数据API (无需认证)
+
+```python
+# 获取用户活动
+requests.get(
+    "https://data-api.polymarket.com/activity",
+    params={
+        "user": "钱包地址",
+        "type": "TRADE",
+        "limit": 100
+    }
+)
+
+# 获取历史价格
+requests.get(
+    "https://gamma-api.polymarket.com/markets/{id}/history",
+    params={
+        "interval": 60,  # 分钟
+        "start": "2025-01-01T00:00:00Z",
+        "end": "2025-01-02T00:00:00Z"
+    }
+)
+```
+
+---
+
+## 参考资源
+
+| 资源 | 链接 |
+|------|------|
+| 官方文档 | https://docs.polymarket.com |
+| Quicknode跟单教程 | https://www.quicknode.com/guides/defi/polymarket-copy-trading-bot |
+| Python SDK | https://github.com/Polymarket/py-clob-client |
+| 追踪鲸鱼 | https://polymarket.com/polywhaler |
+| Discord | https://discord.gg/polymarket |
+
+---
+
+## 下一步行动
+
+1. [ ] 准备钱包私钥
+2. [ ] 部署测试网络练习
+3. [ ] 实现简单跟单策略
+4. [ ] 逐步增加复杂度
