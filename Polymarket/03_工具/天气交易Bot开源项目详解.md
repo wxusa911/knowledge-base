@@ -247,3 +247,73 @@ cd frontend && npm run dev
 ---
 
 *持续更新中...*
+# Polymarket技术栈与代码资源
+
+*来源: Twitter搜索*
+*更新: 2026-03-01*
+
+---
+
+## 🛠️ 核心代码库
+
+### 1. polymarket-websocket-client
+- 一行代码接入Polymarket实时数据
+- WebSocket实时订阅
+
+### 2. polymarket-orderbook-watcher
+- 订单簿监控
+- 可开发带CLI的交易机器人
+
+### 3. polymarket-sdk
+- Python SDK
+- 全功能支持：存钱、Swap、Search
+
+### 4. Polymarket/agents
+- 官方AI Agent框架
+- 官方文档教你如何用AI Agent自动交易
+
+---
+
+## ⚡ 关键技术点
+
+### 延迟是关键
+- REST太慢
+- 必须用WebSocket
+- 服务器要离API足够近
+
+### 推荐架构
+```
+WebSocket → 机器人 → Polymarket API
+   ↑
+CEX实时数据 ← 监控价格差异
+```
+
+---
+
+## 📚 学习资源
+
+- 官方GitHub有完整文档
+- Frank-Wolfe算法 - 量化团队用这个套利
+
+---
+
+## 🎯 快速开始代码
+
+```python
+# 1. 安装SDK
+pip install polymarket-sdk
+
+# 2. WebSocket连接
+from polymarket_websocket_client import subscribe
+
+# 3. 监控订单簿
+from polymarket_orderbook_watcher import OrderBookWatcher
+```
+
+---
+
+## 🔗 相关链接
+
+- polymarket-sdk (GitHub)
+- polymarket-websocket-client
+- Polymarket/agents (官方)
