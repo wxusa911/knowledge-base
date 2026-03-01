@@ -1,0 +1,146 @@
+{
+  "meta": {
+    "lastTouchedVersion": "0.1.6",
+    "lastTouchedAt": "2026-03-01T05:13:44.138Z"
+  },
+  "wizard": {
+    "lastRunAt": "2026-03-01T05:13:44.095Z",
+    "lastRunVersion": "0.1.6",
+    "lastRunCommand": "doctor",
+    "lastRunMode": "local"
+  },
+  "auth": {
+    "profiles": {
+      "opencode:default": {
+        "provider": "opencode",
+        "mode": "api_key"
+      },
+      "nvidia:default": {
+        "provider": "nvidia",
+        "mode": "api_key"
+      }
+    }
+  },
+  "models": {},
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "opencode/big-pickle"
+      },
+      "models": {
+        "opencode/claude-opus-4-5": {
+          "alias": "Opus"
+        },
+        "opencode/kimi-k2.5-free": {},
+        "openai/gpt-4o-mini": {},
+        "opencode/big-pickle": {}
+      },
+      "workspace": "/home/ubuntu/.openclaw/workspace",
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    }
+  },
+  "tools": {},
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto"
+  },
+  "hooks": {
+    "internal": {
+      "enabled": true,
+      "entries": {
+        "boot-md": {
+          "enabled": true
+        },
+        "command-logger": {
+          "enabled": true
+        },
+        "session-memory": {
+          "enabled": true
+        }
+      }
+    }
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "open",
+      "botToken": "8264958347:AAH6VnzUGgPyo2ZORwBcKOZSWl89oi9clqo",
+      "allowFrom": [
+        "*"
+      ],
+      "groupPolicy": "allowlist",
+      "streamMode": "off",
+      "network": {
+        "autoSelectFamily": false
+      },
+      "proxy": "http://127.0.0.1:1080",
+      "accounts": {
+        "default": {
+          "dmPolicy": "pairing",
+          "allowFrom": [
+            "*"
+          ],
+          "groupPolicy": "allowlist",
+          "streamMode": "partial",
+          "botToken": "8264958347:AAH6VnzUGgPyo2ZORwBcKOZSWl89oi9clqo"
+        },
+        "second": {
+          "dmPolicy": "open",
+          "allowFrom": [
+            "*"
+          ],
+          "groupPolicy": "allowlist",
+          "streamMode": "partial",
+          "botToken": "8337407708:AAG7IAaYPVi9CuV2xOPw5rQAK8B6AzXrsGE"
+        }
+      }
+    },
+    "feishu": {
+      "enabled": true,
+      "dmPolicy": "open",
+      "groupPolicy": "open",
+      "accounts": {
+        "main": {
+          "appId": "cli_a90063148eba9bd7",
+          "appSecret": "fCnYkB35i1xwBMcypULPxhIVDaVtKb7A"
+        }
+      }
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "auth": {
+      "mode": "token",
+      "token": "8fa9b456b658242d725c83285b6604bec2903528d9a61acb"
+    },
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    }
+  },
+  "skills": {
+    "install": {
+      "nodeManager": "npm"
+    }
+  },
+  "plugins": {
+    "entries": {
+      "telegram": {
+        "enabled": true
+      },
+      "feishu": {
+        "enabled": true
+      }
+    }
+  }
+}
