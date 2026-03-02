@@ -1,0 +1,8 @@
+{
+  "name": "polymarket-trader",
+  "version": "1.0.0",
+  "description": "Polymarket自动交易策略",
+  "main": "trader.py",
+  "author": "",
+  "license": "MIT"
+}
