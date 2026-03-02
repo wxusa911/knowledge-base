@@ -21,6 +21,79 @@ INITIAL_CAPITAL = 100
 TRADE_AMOUNT = 10
 FEE = 0.02
 
+# ============== 风险控制配置 ==============
+RISK_CONTROL = {
+    "单笔最大": 10,           # 单笔交易不超过$10
+    "单日限额": 500,          # 单日交易不超过$500
+    "总仓位上限": 0.5,        # 仓位不超过50%
+    "止损阈值": -0.15,        # 亏损15%自动平仓
+    "止盈阈值": 0.30,         # 盈利30%部分止盈
+    "熔断阈值": -0.30,        # 单日亏损30%停止交易
+    "最小胜率": 0.60,         # 最小胜率要求
+    "Kelly系数": 0.25,       # Kelly仓位管理系数
+}
+
+# 交易统计
+daily_stats = {
+    " trades_today": 0,
+    "volume_today": 0,
+    "pnl_today": 0,
+    "last_reset": datetime.now().date()
+}
+
+def check_risk_limits(position_value: float, entry_price: float, current_price: float) -> dict:
+    """风险检查 - 返回是否允许交易及原因"""
+    today = datetime.now().date()
+    
+    # 每日重置
+    if daily_stats["last_reset"] != today:
+        daily_stats["trades_today"] = 0
+        daily_stats["volume_today"] = 0
+        daily_stats["pnl_today"] = 0
+        daily_stats["last_reset"] = today
+    
+    # 检查单日交易次数
+    if daily_stats["trades_today"] >= 20:
+        return {"allowed": False, "reason": "单日交易次数已达上限"}
+    
+    # 检查单日交易额
+    if daily_stats["volume_today"] >= RISK_CONTROL["单日限额"]:
+        return {"allowed": False, "reason": "单日交易额已达上限"}
+    
+    # 检查仓位
+    if position_value > INITIAL_CAPITAL * RISK_CONTROL["总仓位上限"]:
+        return {"allowed": False, "reason": "仓位已满"}
+    
+    # 检查止损
+    if position_value > 0:
+        pnl_pct = (current_price - entry_price) / entry_price
+        if pnl_pct <= RISK_CONTROL["止损阈值"]:
+            return {"allowed": False, "reason": f"触发止损: {pnl_pct:.1%}", "action": "STOP_LOSS"}
+        if pnl_pct >= RISK_CONTROL["止盈阈值"]:
+            return {"allowed": False, "reason": f"触发止盈: {pnl_pct:.1%}", "action": "TAKE_PROFIT"}
+    
+    # 检查熔断
+    if daily_stats["pnl_today"] <= -INITIAL_CAPITAL * RISK_CONTROL["熔断阈值"]:
+        return {"allowed": False, "reason": "触发熔断: 单日亏损超30%", "action": "CIRCUIT_BREAKER"}
+    
+    return {"allowed": True}
+
+def calculate_kelly_position(win_rate: float, avg_win: float, avg_loss: float) -> float:
+    """Kelly公式计算仓位"""
+    if win_rate <= 0 or avg_loss <= 0:
+        return 0
+    
+    # Kelly = p*W - (1-p)*L / W
+    # 简化: Kelly = (win_rate * avg_win - (1-win_rate) * avg_loss) / avg_win
+    kelly = (win_rate * avg_win - (1 - win_rate) * avg_loss) / avg_win
+    
+    # 使用Fractional Kelly (默认1/4)
+    kelly = kelly * RISK_CONTROL["Kelly系数"]
+    
+    # 限制最大仓位
+    max_position = INITIAL_CAPITAL * RISK_CONTROL["总仓位上限"]
+    return min(kelly * INITIAL_CAPITAL, max_position, RISK_CONTROL["单笔最大"])
+
 # 主题关键词 (精简)
 TOPIC_KEYWORDS = {
     'crypto': ['BTC', 'Bitcoin', 'ETH', 'Ethereum', 'SOL'],
